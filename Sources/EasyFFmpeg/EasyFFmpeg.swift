@@ -59,4 +59,25 @@ public class FFmpegViewModel: ObservableObject {
             }
         }
     }
+    
+    public func mergeAudioAndVideo(videoURL: String, audioUrl: String, completion: @escaping (URL?) -> Void) {
+        
+        let outputURL = FileManager.default.temporaryDirectory.appendingPathComponent("\(UUID().uuidString).mp4")
+        
+        var command: String
+        
+        command = """
+             -i "\(videoURL)" -i "\(audioUrl)" -c:v copy -map 0:v -map 1:a -c:a aac -strict experimental -shortest "\(outputURL.path)"
+        """
+        
+        FFmpegKit.executeAsync(command) { session in
+            if let returnCode = session?.getReturnCode(), returnCode.isValueSuccess() {
+                print("✅ Download & Merge Successful: \(outputURL.path)")
+                completion(outputURL)
+            } else {
+                print("❌ FFmpeg Error: \(session?.getFailStackTrace() ?? "Unknown error")")
+                completion(nil)
+            }
+        }
+    }
 }
