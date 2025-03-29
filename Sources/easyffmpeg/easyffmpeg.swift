@@ -1,9 +1,7 @@
 import ffmpegkit
 import SwiftUI
 
-public class FFmpegViewModel: ObservableObject {
-    
-    public init() {}
+class FFmpegViewModel: ObservableObject {
     
     func createRemoteFileList(videoURLs: [String]) -> URL? {
         let fileListContent = videoURLs.map { "file '\($0)'" }.joined(separator: "\n")
