@@ -13,7 +13,7 @@ public class FFmpegViewModel: ObservableObject {
             }
         }
     }
-
+    
     public func createRemoteFileList(videoURLs: [String]) -> URL? {
         let fileListContent = videoURLs.map { "file '\($0)'" }.joined(separator: "\n")
         
@@ -27,7 +27,7 @@ public class FFmpegViewModel: ObservableObject {
             return nil
         }
     }
-
+    
     public func downloadAndConcatenateVideos(videoURLs: [String], completion: @escaping (URL?) -> Void) {
         guard let fileList = createRemoteFileList(videoURLs: videoURLs) else {
             completion(nil)
@@ -36,7 +36,7 @@ public class FFmpegViewModel: ObservableObject {
         
         let outputURL = FileManager.default.temporaryDirectory.appendingPathComponent("\(UUID().uuidString).mp4")
         var command: String
-
+        
         if videoURLs.count == 1, let firstVideoUrl = videoURLs.first {
             command = """
             -i "\(firstVideoUrl)" -c copy "\(outputURL.path)"
@@ -46,6 +46,29 @@ public class FFmpegViewModel: ObservableObject {
             -protocol_whitelist file,http,https,tcp,tls -f concat -safe 0 -i "\(fileList.path)" -c copy "\(outputURL.path)"
             """
         }
+        
+        print("🔹 Processing \(videoURLs.count) video(s) with FFmpeg.")
+        
+        FFmpegKit.executeAsync(command) { session in
+            if let returnCode = session?.getReturnCode(), returnCode.isValueSuccess() {
+                print("✅ Download & Merge Successful: \(outputURL.path)")
+                completion(outputURL)
+            } else {
+                print("❌ FFmpeg Error: \(session?.getFailStackTrace() ?? "Unknown error")")
+                completion(nil)
+            }
+        }
+    }
+    
+    public func mergeAudioAndVideo(videoURL: String, audioUrl: String, completion: @escaping (URL?) -> Void) {
+        
+        let outputURL = FileManager.default.temporaryDirectory.appendingPathComponent("\(UUID().uuidString).mp4")
+        
+        var command: String
+        
+        command = """
+             -i "\(videoURL)" -i "\(audioUrl)" -c:v copy -map 0:v -map 1:a -c:a aac -strict experimental -shortest "\(outputURL.path)"
+        """
         
         print("🔹 Processing \(videoURLs.count) video(s) with FFmpeg.")
         
