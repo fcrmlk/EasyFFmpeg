@@ -1,18 +1,18 @@
-// swift-tools-version: 5.9
+// swift-tools-version: 6.0
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
 
 let package = Package(
-    name: "easyffmpeg",
+    name: "EasyFFmpeg",
     platforms: [
         .iOS(.v15)
     ],
     products: [
+        // Products define the executables and libraries a package produces, making them visible to other packages.
         .library(
-            name: "easyffmpeg",
-            targets: ["easyffmpeg"]
-        ),
+            name: "EasyFFmpeg",
+            targets: ["EasyFFmpeg"]),
     ],
     targets: [
         .binaryTarget(
@@ -48,7 +48,7 @@ let package = Package(
             path: "Sources/easyffmpeg/libswscale.xcframework"
         ),
         .target(
-            name: "easyffmpeg",
+            name: "EasyFFmpeg",
             dependencies: [
                 "ffmpegkit",
                 "libavcodec",

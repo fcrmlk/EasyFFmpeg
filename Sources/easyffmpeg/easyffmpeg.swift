@@ -1,5 +1,4 @@
-// The Swift Programming Language
-// https://docs.swift.org/swift-book
+// FCRMLK - haid3rawan@icloud.com
 
 import ffmpegkit
 import SwiftUI
