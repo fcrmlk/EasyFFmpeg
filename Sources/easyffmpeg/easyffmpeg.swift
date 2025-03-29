@@ -3,6 +3,8 @@ import SwiftUI
 
 public class FFmpegViewModel: ObservableObject {
     
+    public init() {}
+    
     func createRemoteFileList(videoURLs: [String]) -> URL? {
         let fileListContent = videoURLs.map { "file '\($0)'" }.joined(separator: "\n")
         let fileListURL = FileManager.default.temporaryDirectory.appendingPathComponent("file_list.txt")
