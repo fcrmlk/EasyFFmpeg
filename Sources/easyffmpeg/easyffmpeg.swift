@@ -4,18 +4,7 @@
 import ffmpegkit
 import SwiftUI
 
-struct ContentView: View {
-    var body: some View {
-        Text("Hello, World!")
-            .onAppear {
-                
-            }
-    }
-}
-
-
-class FFViewModel: ObservableObject {
-    
+    public
     func createRemoteFileList(videoURLs: [String]) -> URL? {
         let fileListContent = videoURLs.map { "file '\($0)'" }.joined(separator: "\n")
         
@@ -29,7 +18,8 @@ class FFViewModel: ObservableObject {
             return nil
         }
     }
-    
+
+public
     func downloadAndConcatenateVideos(videoURLs: [String], completion: @escaping (URL?) -> Void) {
         guard let fileList = createRemoteFileList(videoURLs: videoURLs) else {
             completion(nil)
@@ -66,4 +56,3 @@ class FFViewModel: ObservableObject {
             }
         }
     }
-}
