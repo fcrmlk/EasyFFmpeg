@@ -70,8 +70,6 @@ public class FFmpegViewModel: ObservableObject {
              -i "\(videoURL)" -i "\(audioUrl)" -c:v copy -map 0:v -map 1:a -c:a aac -strict experimental -shortest "\(outputURL.path)"
         """
         
-//        print("🔹 Processing \(videoURLs.count) video(s) with FFmpeg.")
-        
         FFmpegKit.executeAsync(command) { session in
             if let returnCode = session?.getReturnCode(), returnCode.isValueSuccess() {
                 print("✅ Download & Merge Successful: \(outputURL.path)")
