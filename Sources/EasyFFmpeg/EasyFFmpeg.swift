@@ -5,6 +5,8 @@ import SwiftUI
 
 public class FFmpegViewModel: ObservableObject {
     
+    private var currentFFmpegSession: FFmpegSession? // Store the reference to the session
+    
     public init() {
         // Enable FFmpeg log callback
         FFmpegKitConfig.enableLogCallback { log in
@@ -49,7 +51,9 @@ public class FFmpegViewModel: ObservableObject {
         
         print("🔹 Processing \(videoURLs.count) video(s) with FFmpeg.")
         
-        FFmpegKit.executeAsync(command) { session in
+        currentFFmpegSession = FFmpegKit.executeAsync(command) { session in
+            self.currentFFmpegSession = nil // clear the session reference when the task completes
+            
             if let returnCode = session?.getReturnCode(), returnCode.isValueSuccess() {
                 print("✅ Download & Merge Successful: \(outputURL.path)")
                 completion(outputURL)
@@ -70,7 +74,9 @@ public class FFmpegViewModel: ObservableObject {
              -i "\(videoURL)" -i "\(audioUrl)" -c:v copy -map 0:v -map 1:a -c:a aac -strict experimental -shortest "\(outputURL.path)"
         """
         
-        FFmpegKit.executeAsync(command) { session in
+        currentFFmpegSession = FFmpegKit.executeAsync(command) { session in
+            self.currentFFmpegSession = nil // clear the session reference when the task completes
+            
             if let returnCode = session?.getReturnCode(), returnCode.isValueSuccess() {
                 print("✅ Download & Merge Successful: \(outputURL.path)")
                 completion(outputURL)
@@ -79,5 +85,11 @@ public class FFmpegViewModel: ObservableObject {
                 completion(nil)
             }
         }
+    }
+    
+    // Function to cancel the FFmpeg operation
+    public func cancelFFmpegDownload() {
+        currentFFmpegSession?.cancel()
+        print("⛔️ FFmpeg process cancelled.")
     }
 }
