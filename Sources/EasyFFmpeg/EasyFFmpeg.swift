@@ -109,6 +109,65 @@ public class FFmpegViewModel: ObservableObject {
         }
     }
     
+    public func generateSRT(from subtitles: [String], durationPerLine: Int = 6) -> URL? {
+        var srtContent = ""
+        
+        for (index, line) in subtitles.enumerated() {
+            let startSeconds = index * durationPerLine
+            let endSeconds = (index + 1) * durationPerLine
+            
+            let startTime = formatToSRTTime(seconds: startSeconds)
+            let endTime = formatToSRTTime(seconds: endSeconds)
+            
+            srtContent += """
+            \(index + 1)
+            \(startTime) --> \(endTime)
+            \(line)
+            
+            """
+        }
+
+        let fileURL = FileManager.default.temporaryDirectory.appendingPathComponent("generated_\(UUID().uuidString).srt")
+        do {
+            try srtContent.write(to: fileURL, atomically: true, encoding: .utf8)
+            print("✅ SRT file created: \(fileURL.path)")
+            return fileURL
+        } catch {
+            print("❌ Failed to write SRT: \(error)")
+            return nil
+        }
+    }
+    
+    public func addSubtitlesToVideo(videoURL: String, subtitleURL: String, completion: @escaping (URL?) -> Void) {
+        let outputURL = FileManager.default.temporaryDirectory.appendingPathComponent("\(UUID().uuidString)_subtitled.mp4")
+
+        let command = """
+        -i "\(videoURL)" -vf subtitles='\(subtitleURL)' -c:a copy "\(outputURL.path)"
+        """
+
+        print("🎬 Adding subtitles to video...")
+
+        currentFFmpegSession = FFmpegKit.executeAsync(command) { session in
+            self.currentFFmpegSession = nil
+            
+            if let returnCode = session?.getReturnCode(), returnCode.isValueSuccess() {
+                print("✅ Subtitles added successfully: \(outputURL.path)")
+                completion(outputURL)
+            } else {
+                print("❌ FFmpeg subtitle error: \(session?.getFailStackTrace() ?? "Unknown error")")
+                completion(nil)
+            }
+        }
+    }
+    
+    private func formatToSRTTime(seconds: Int) -> String {
+        let hours = seconds / 3600
+        let minutes = (seconds % 3600) / 60
+        let secs = seconds % 60
+        return String(format: "%02d:%02d:%02d,000", hours, minutes, secs)
+    }
+    
+    
     // Function to cancel the FFmpeg operation
     public func cancelFFmpegDownload() {
         currentFFmpegSession?.cancel()
