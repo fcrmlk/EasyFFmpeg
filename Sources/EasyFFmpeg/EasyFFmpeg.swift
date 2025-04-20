@@ -15,6 +15,28 @@ public class FFmpegViewModel: ObservableObject {
             }
         }
     }
+
+    public func downloadSingleVideo(from url: String, completion: @escaping (URL?) -> Void) {
+        let outputURL = FileManager.default.temporaryDirectory.appendingPathComponent("\(UUID().uuidString).mp4")
+
+        let command = """
+        -i "\(url)" -c copy "\(outputURL.path)"
+        """
+
+        print("📥 Starting single video download with FFmpeg.")
+
+        currentFFmpegSession = FFmpegKit.executeAsync(command) { session in
+            self.currentFFmpegSession = nil
+
+            if let returnCode = session?.getReturnCode(), returnCode.isValueSuccess() {
+                print("✅ Single video download successful: \(outputURL.path)")
+                completion(outputURL)
+            } else {
+                print("❌ FFmpeg Error (Single Download): \(session?.getFailStackTrace() ?? "Unknown error")")
+                completion(nil)
+            }
+        }
+    }
     
     public func createRemoteFileList(videoURLs: [String]) -> URL? {
         let fileListContent = videoURLs.map { "file '\($0)'" }.joined(separator: "\n")
