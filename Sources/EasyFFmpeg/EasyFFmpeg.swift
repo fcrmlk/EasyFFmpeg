@@ -138,23 +138,26 @@ public class FFmpegViewModel: ObservableObject {
         }
     }
     
-    public func addSubtitlesToVideo(videoURL: String, subtitleURL: String, completion: @escaping (URL?) -> Void) {
+    public func addSubtitlesToVideo(videoURL: String, srtPath: String, completion: @escaping (URL?) -> Void) {
         let outputURL = FileManager.default.temporaryDirectory.appendingPathComponent("\(UUID().uuidString)_subtitled.mp4")
 
+        // VERY IMPORTANT: Escape quotes inside the path
+        let escapedSrtPath = srtPath.replacingOccurrences(of: ":", with: "\\:").replacingOccurrences(of: "'", with: "\\'")
+
         let command = """
-        -i "\(videoURL)" -vf subtitles='\(subtitleURL)' -c:a copy "\(outputURL.path)"
+        -i "\(videoURL)" -vf "subtitles='\(escapedSrtPath)'" -c:a copy "\(outputURL.path)"
         """
 
-        print("🎬 Adding subtitles to video...")
+        print("🎬 Running subtitle FFmpeg command:\n\(command)")
 
         currentFFmpegSession = FFmpegKit.executeAsync(command) { session in
             self.currentFFmpegSession = nil
-            
+
             if let returnCode = session?.getReturnCode(), returnCode.isValueSuccess() {
                 print("✅ Subtitles added successfully: \(outputURL.path)")
                 completion(outputURL)
             } else {
-                print("❌ FFmpeg subtitle error: \(session?.getFailStackTrace() ?? "Unknown error")")
+                print("❌ FFmpeg subtitle error: \(session?.getAllLogsAsString() ?? "Unknown error")")
                 completion(nil)
             }
         }
